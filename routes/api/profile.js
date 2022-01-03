@@ -124,4 +124,16 @@ router.post(
   }
 );
 
+router.delete("/", auth, async (req, res) => {
+  try {
+    await Profile.findOneAndDelete({ user: req.user.id });
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({ msg: "User deleted" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Server error");
+  }
+});
+
 module.exports = router;
