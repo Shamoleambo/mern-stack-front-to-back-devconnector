@@ -33,6 +33,26 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/user/:user_id", async (req, res) => {
+  try {
+    const profile = await Profile.findOne({
+      user: req.params.user_id,
+    }).populate("user", ["name", "avatar"]);
+
+    if (!profile) {
+      return res.status(400).json({ msg: "Profile not found" });
+    }
+
+    res.json(profile);
+  } catch (error) {
+    if (error.kind == "ObjectId") {
+      return res.status(400).json({ msg: "Profile not found" });
+    }
+    console.log(error);
+    res.status(500).send("Server error");
+  }
+});
+
 router.post(
   "/",
   [
