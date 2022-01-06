@@ -207,8 +207,35 @@ router.delete("/experience/:experience_id", auth, async (req, res) => {
     const removeIndex = profile.experience
       .map((item) => item.id)
       .indexOf(req.params.experience_id);
-    profile.experience.splice(removeIndex, 1);
+    if (removeIndex < 0) {
+      return res
+        .status(400)
+        .send("The experience you're trying to delete doesn't exist");
+    }
 
+    profile.experience.splice(removeIndex, 1);
+    await profile.save();
+
+    res.json(profile);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("Server error");
+  }
+});
+
+router.delete("/education/:education_id", auth, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ user: req.user.id });
+    const removeIndex = profile.education
+      .map((item) => item.id)
+      .indexOf(req.params.education_id);
+    if (removeIndex < 0) {
+      return res
+        .status(400)
+        .send("The education experience you're trying to delete doesn't exist");
+    }
+
+    profile.education.splice(removeIndex, 1);
     await profile.save();
 
     res.json(profile);
