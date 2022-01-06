@@ -124,18 +124,6 @@ router.post(
   }
 );
 
-router.delete("/", auth, async (req, res) => {
-  try {
-    await Profile.findOneAndDelete({ user: req.user.id });
-    await User.findByIdAndDelete(req.user.id);
-
-    res.json({ msg: "User deleted" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).send("Server error");
-  }
-});
-
 router.put(
   "/experience",
   [
@@ -169,6 +157,49 @@ router.put(
   }
 );
 
+router.put(
+  "/education",
+  [
+    auth,
+    [
+      check("school", "Please insert a school").not().isEmpty(),
+      check("degree", "Please insert a degree").not().isEmpty(),
+      check("fieldofstudy", "Please insert a field of study").not().isEmpty(),
+      check("from", "Please insert a starting date").not().isEmpty(),
+    ],
+  ],
+  async (req, res) => {
+    console.log("mano");
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { school, degree, fieldofstudy, from, to, currentdescription } =
+      req.body;
+    const newEdu = {
+      school,
+      degree,
+      fieldofstudy,
+      from,
+      to,
+      currentdescription,
+    };
+
+    try {
+      const profile = await Profile.findOne({ user: req.user.id });
+
+      profile.education.unshift(newEdu);
+
+      await profile.save();
+      res.json(profile);
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
 router.delete("/experience/:experience_id", auth, async (req, res) => {
   try {
     const profile = await Profile.findOne({ user: req.user.id });
@@ -181,6 +212,18 @@ router.delete("/experience/:experience_id", auth, async (req, res) => {
     await profile.save();
 
     res.json(profile);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("Server error");
+  }
+});
+
+router.delete("/", auth, async (req, res) => {
+  try {
+    await Profile.findOneAndDelete({ user: req.user.id });
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({ msg: "User deleted" });
   } catch (error) {
     console.log(error.message);
     res.status(500).send("Server error");
