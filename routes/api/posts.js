@@ -153,6 +153,34 @@ router.put("/unlike/:post_id", auth, async (req, res) => {
   }
 });
 
+router.delete("/comment/:post_id/:comment_id", auth, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.post_id);
+    const comment = post.comments.find(
+      (comment) => comment.id.toString() === req.params.comment_id
+    );
+
+    if (!comment) {
+      return res.status(400).json({ msg: "Comment does not exist" });
+    }
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: "User not authorized" });
+    }
+
+    const removeIndex = post.comments
+      .map((comment) => comment.id.toString())
+      .indexOf(req.params.comment_id);
+    post.comments.splice(removeIndex, 1);
+
+    await post.save();
+
+    res.json(post.comments);
+  } catch (error) {
+    console.log(error.message);
+    res.status(500).send("Server error");
+  }
+});
+
 router.delete("/:post_id", auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.post_id);
