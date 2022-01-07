@@ -38,6 +38,40 @@ router.get("/:post_id", auth, async (req, res) => {
 });
 
 router.post(
+  "/comment/:post_id",
+  [
+    auth,
+    check("text", "Please insert a text for your comment").not().isEmpty(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: error.array() });
+    }
+
+    try {
+      const user = await User.findById(req.user.id).select("-password");
+      const post = await Post.findById(req.params.post_id);
+
+      const newComment = {
+        user: req.user.id,
+        text: req.body.text,
+        name: user.name,
+        avatar: user.avatar,
+      };
+
+      post.comments.unshift(newComment);
+      await post.save();
+
+      res.json(post.comments);
+    } catch (error) {
+      console.log(error.message);
+      res.status(500).send("Server error");
+    }
+  }
+);
+
+router.post(
   "/",
   [
     auth,
